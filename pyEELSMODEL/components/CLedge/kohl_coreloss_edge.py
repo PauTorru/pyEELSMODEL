@@ -178,4 +178,21 @@ class KohlLossEdge(CoreLossEdge):
                                                       q_steps=100,
                                                       swap_axes=True)
 
+        self.cross_section=css
+
         return css
+
+    
+    def calculate(self): 
+        pA = self.parameters[0]
+        p2 = self.parameters[1]
+        p3 = self.parameters[2]
+        p4 = self.parameters[3]
+
+        if p2.ischanged() or p3.ischanged() or p4.ischanged():
+            self.cross_section = self.calculate_cross_section()
+            self.data = pA.getvalue() * self.cross_section
+
+        if pA.ischanged():
+            self.data = pA.getvalue() * self.cross_section
+        self.setunchanged()
