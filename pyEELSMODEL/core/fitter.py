@@ -754,15 +754,60 @@ class Fitter:
             The fitted multispectrum at each probe position only have the given
              components in comps.
         """
-        ncomps = []
-        for comp in self.model.components:
-            if comp in comps:
-                pass
-            else:
-                ncomps.append(comp)
+        conv = self.model.getconvolutor()
+        is_conv_multi = (conv is not None) and isinstance(conv.llspectrum, MultiSpectrum)
 
-        s = self.model_to_multispectrum_without_comps(ncomps)
-        return s
+        sig = self.spectrum.copy()
+        shape = (sig.xsize,sig.ysize)
+
+        # Allow calculating model with e.g. minor edges skipping the corresponding main edge
+        coupling={}
+        for c in comps:
+                for p in c.parameters:
+                    if p.iscoupled():
+                        if p.coupled_parameter.ischangeable():
+                            coupling[p]={"coupled_to":p.coupled_parameter,
+                                         "fraction":p.couple_fraction,
+                                         "index":self.model.freeparameters.index(p.coupled_parameter)}
+                            p.releasecoupling()
+                            p.setchangeable(True)
+
+        
+        for index in tqdm(np.ndindex(shape),total=np.prod(shape),leave=True,position=0):
+            islice = np.s_[index]
+
+            if is_conv_multi:
+                conv.llspectrum.setcurrentspectrum(index)
+            for p in self.model.getfreeparameters():
+                p.setvalue(0)
+            
+            
+            for c in comps:
+                for p in  c.parameters:  
+                    if p in coupling.keys():
+                        val = self.coeff_matrix[islice][coupling[p]["index"]]
+                        p.setvalue(val*coupling[p]["fraction"])
+                    elif p.ischangeable():
+                        val = self.coeff_matrix[islice][self.model.freeparameters.index(p)]
+                        p.setvalue(val)
+            
+            self.model.calculate()
+            sig.multidata[islice]=self.model.data
+
+        #recouple everything
+        for c in comps:
+                for p in c.parameters:
+                    if p in coupling.keys():
+                        p.coupled=True
+                        p.couple_parameter=coupling[p]["coupled_to"]
+                        p.couple_fraction= coupling[p]["fraction"]
+                        p.setchangeable(False)
+
+        
+
+        sig.data=sig.multidata[0,0]
+                    
+        return sig
 
     def get_experimental_edge(self, component, percentile, plotting=False,
                               other_spectra=[]):
