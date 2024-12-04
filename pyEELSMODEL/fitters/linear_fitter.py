@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.optimize import nnls
+import scipy as sc
 
 from pyEELSMODEL.core.fitter import Fitter
 from pyEELSMODEL.components.MScatter.mscatter import Mscatter
@@ -223,6 +224,14 @@ class LinearFitter(Fitter):
 
         elif self.method == 'ols':
             coeff, resi, rank, sing = np.linalg.lstsq(AW, yW, rcond=-1)
+            self.coeff = coeff
+            if resi.size == 0:
+                self.error = np.inf
+            else:
+                self.error = resi[0]
+
+        elif self.method == "ols_gelsy":
+            coeff, resi, rank, sing = sc.linalg.lstsq(AW, yW, cond=-1, lapack_driver="gelsy")
             self.coeff = coeff
             if resi.size == 0:
                 self.error = np.inf
