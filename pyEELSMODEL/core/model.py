@@ -373,7 +373,10 @@ class Model(Spectrum):
         self.order_coupled_components()
 
         for comp in self.components:
-            if not comp._isconvolutor:
+
+            if comp.supressed:
+                pass
+            elif not comp._isconvolutor:
                 if comp.getcanconvolute() and (not (comp.get_ismultiplier())
                                                and not (comp.getshifter())):
 
@@ -407,7 +410,9 @@ class Model(Spectrum):
         # then add components which can not be convoluted and are not
         # convolutors and are not shifters and are not multipliers
         for comp in self.components:
-            if not (comp.getcanconvolute()) and not (comp.get_ismultiplier()) \
+            if comp.supressed:
+                pass
+            elif not (comp.getcanconvolute()) and not (comp.get_ismultiplier()) \
                     and not isinstance(comp, Mscatter) \
                     and not (comp.getshifter()):
                 comp.calculate()

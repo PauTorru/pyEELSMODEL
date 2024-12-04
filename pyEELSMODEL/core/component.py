@@ -55,6 +55,7 @@ class Component(Spectrum):
         self.description = ""
         self._name = ""
         self.visible = True
+        self.supressed = False
 
         self._setshifter(False)
         self._setcanconvolute(True)

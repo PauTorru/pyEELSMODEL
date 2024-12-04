@@ -763,14 +763,14 @@ class Fitter:
         # Allow calculating model with e.g. minor edges skipping the corresponding main edge
         coupling={}
         for c in comps:
-                for p in c.parameters:
-                    if p.iscoupled():
-                        if p.coupled_parameter.ischangeable():
-                            coupling[p]={"coupled_to":p.coupled_parameter,
-                                         "fraction":p.couple_fraction,
-                                         "index":self.model.freeparameters.index(p.coupled_parameter)}
-                            p.releasecoupling()
-                            p.setchangeable(True)
+            for p in c.parameters:
+                if p.iscoupled():
+                    if p.coupled_parameter.ischangeable():
+                        coupling[p]={"coupled_to":p.coupled_parameter,
+                                     "fraction":p.couple_fraction,
+                                     "index":self.model.freeparameters.index(p.coupled_parameter)}
+                        p.releasecoupling()
+                        p.setchangeable(True)
 
         
         for index in tqdm(np.ndindex(shape),total=np.prod(shape),leave=True,position=0):
@@ -778,7 +778,7 @@ class Fitter:
 
             if is_conv_multi:
                 conv.llspectrum.setcurrentspectrum(index)
-            for p in self.model.getfreeparameters():
+            for p in self.model.allparameters:
                 p.setvalue(0)
             
             
